@@ -1,33 +1,59 @@
 #include <stdio.h>
 #include <stdlib.h>
-// #include <pthread.h>
+#include <pthread.h>
 
-// struct sum_runner_struct {
-// 	long long limit;
-// 	long long answer;
-// };
+void* check_linha(void* sudoku){
+
+	int **sudoku_aux = (int **) sudoku;
+	int valor[9];
+	int flag = 0;
+
+	for(int p = 0; p < 9; p++){
+		valor[p] = 1;
+	}
+
+	for(int i = 0; i < 9; i++){
+		for(int j = 0; j < 9; j++){
+
+			if(--valor[sudoku_aux[i][j]-1] == (-1)*(i + 1))
+				pthread_exit(&flag);
+		}
+	}
+
+	flag = 1;
+	pthread_exit(&flag);
+}
+
+void* check_coluna(void* sudoku){
+	int **sudoku_aux = (int **) sudoku;
+	int valor[9];
+	int flag = 0;
+
+	for(int p = 0; p < 9; p++){
+		valor[p] = 1;
+	}
+
+	for(int i = 0; i < 9; i++){
+		for(int j = 0; j < 9; j++){
+
+			if(--valor[sudoku_aux[j][i]-1] == (-1)*(j + 1))
+				pthread_exit(&flag);
+		}
+	}
+
+	flag = 1;
+	pthread_exit(&flag);
+}
+
+// void* check_grid(){
 //
-// // Thread function to generate sum of 0 to N
-// void* sum_runner(void* arg)
-// {
-// 	struct sum_runner_struct *arg_struct =
-// 			(struct sum_runner_struct*) arg;
-//
-// 	long long sum = 0;
-// 	for (long long i = 0; i <= arg_struct->limit; i++) {
-// 		sum += i;
-// 	}
-//
-// 	arg_struct->answer = sum;
-//
-// 	pthread_exit(0);
 // }
 
 int main(){
 
 	int sudoku[9][9];
+	int resultado[11];
 
-	int c;
 	FILE *file;
 	file = fopen("numeros.txt", "r");
 
@@ -40,30 +66,31 @@ int main(){
 			fscanf (file, "%d", &k);
 		}
 	}
-
 	fclose(file);
+
+	for(int i = 0; i < 9; i++){
+		printf("%d ",sudoku[0][i]);
+	}
 
 	// Quantidade de Threads
 	int num_args = 11;
-
-	struct sum_runner_struct args[num_args];
-
-	// Launch thread
 	pthread_t tids[num_args];
-	for (int i = 0; i < num_args; i++) {
-		args[i].limit = atoll(argv[i + 1]);
 
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-		pthread_create(&tids[i], &attr, sum_runner, &args[i]);
-	}
+	// Check_linha
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	resultado[0] = pthread_create(&tids[0], &attr, check_linha, sudoku);
 
-	// Wait until thread is done its work
-	for (int i = 0; i < num_args; i++) {
-		pthread_join(tids[i], NULL);
-		printf("Sum for thread %d is %lld\n",
-				i, args[i].answer);
-	}
+
+	// Check_coluna
+	pthread_attr_t attr_1;
+	pthread_attr_init(&attr_1);
+	resultado[1] = pthread_create(&tids[1], &attr_1, check_coluna, sudoku);
+
+	pthread_join(tids[0], NULL);
+	pthread_join(tids[1], NULL);
+
+	printf("%d %d\n", resultado[1], resultado[0]);
 
 	return 0;
 }
