@@ -20,40 +20,62 @@ void* check_linha(void* sudoku){
 
 	int (*sudoku_aux)[9] = sudoku;
 	int valor[9];
-	int flag = 0;
+	int flag = 1;
 
 	inicializar_vetor(valor);
 
 	for(int i = 0; i < 9; i++){
 		for(int j = 0; j < 9; j++){
-			if(--valor[sudoku_aux[i][j]-1] == (-1)*(i + 1))
-			{
-				printf("Um erro encontrado na linha!\nNúmero %d se repete na linha %d, coluna: %d.\n\n", sudoku_aux[i][j], i+1, j+1);
-				pthread_exit((int*)0);
+			// if(--valor[sudoku_aux[i][j]-1] == (-1)*(i + 1))
+			// {
+			// 	printf("Um erro encontrado na linha!\nNúmero %d se repete na linha %d, coluna: %d.\n\n", sudoku_aux[i][j], i+1, j+1);
+			// 	pthread_exit((int*)0);
+			// }
+
+			if(--valor[sudoku_aux[i][j]-1] < 0){
+				printf("Numero %d se repete na linha %d.\n\n",sudoku_aux[i][j],i+1);
+				flag = 0;
 			}
 		}
+		inicializar_vetor(valor);
 	}
 
-	pthread_exit((int*)1);
+	if(flag)
+		pthread_exit((int*)1);
+	else
+		pthread_exit((int*)0);
 }
 
 void* check_coluna(void* sudoku){
 	int (*sudoku_aux)[9] = sudoku;
 	int valor[9];
+	int flag = 1;
 
 	inicializar_vetor(valor);
 
 	for(int i = 0; i < 9; i++){
 		for(int j = 0; j < 9; j++){
 
-			if(--valor[sudoku_aux[j][i]-1] == (-1)*(i + 1))
+			// if(--valor[sudoku_aux[j][i]-1] == (-1)*(i + 1))
+			// {
+			// 	printf("Um erro encontrado na coluna!\nNúmero %d se repete na linha %d, coluna: %d.\n\n", sudoku_aux[i][j], i+1, j+1);
+			// 	pthread_exit((int*)0);
+			// }
+
+			if(--valor[sudoku_aux[j][i]-1] < 0)
 			{
-				printf("Um erro encontrado na coluna!\nNúmero %d se repete na linha %d, coluna: %d.\n\n", sudoku_aux[i][j], i+1, j+1);
-				pthread_exit((int*)0);
+				printf("Numero %d se repete na coluna %d.\n\n",sudoku_aux[j][i],i+1);
+				flag = 0;
 			}
+
 		}
+		inicializar_vetor(valor);
 	}
-	pthread_exit((int*)1);
+
+	if(flag)
+		pthread_exit((int*)1);
+	else
+		pthread_exit((int*)0);
 }
 
 void* check_grid(void* dados){
