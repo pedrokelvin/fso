@@ -27,12 +27,23 @@ typedef struct thread{
 void* monitor(void *pt) {
   while(countThreads > 1)
   {
-    sem_wait(&sem_aluno);
-    // sleep(7);
-    sem_post(&sem_monitor);
+    int qntAluno;
+    int sendoAtendido;
+    sem_getvalue(&sem_sendoAtendido, &sendoAtendido);
+    sem_getvalue(&sem_filaEspera, &qntAluno);
+    if(sendoAtendido == 1 && qntAluno == (int)ceil((totalThreads-1)/2.0)) {
+      printf("Monitor dormindo\n");
+      sleep(5);
+    }
+    else {
+      printf("MONITOR ATENDENDO\n");
+      sem_wait(&sem_aluno);
+      sleep(5);
+      sem_post(&sem_monitor);
 
-    // --countThreads;
-    sem_wait(&sem_aviso);
+      // --countThreads;
+      sem_wait(&sem_aviso);
+    }
   }
 }
 
@@ -40,7 +51,8 @@ void* emAtendimento(void *pt){
   sem_wait(&sem_sendoAtendido);
   Thread *pt_aux = (Thread *) pt;
   sem_wait(&sem_monitor);
-  sleep(7);
+  printf("O aluno %lu está sendo atendido\n", pt_aux->id);
+  sleep(5);
   sem_post(&sem_aluno);
   if(pt_aux->filaEspera == 1)
   {
@@ -90,6 +102,7 @@ void* comportamentoAluno(void* pt){
         else if(total <= 0)
         {
           pthread_mutex_unlock(&mutex_filaEspera);
+          sleep(3);
           break;
         }
         pthread_mutex_unlock(&mutex_filaEspera);
@@ -97,7 +110,6 @@ void* comportamentoAluno(void* pt){
 
         pthread_mutex_lock(&mutex);
         // printf("VALOR DO SENDOATENDIDO = %d\n", sendoAtendido);
-        printf("O aluno %lu está sendo atendido\n", pt_aux->id);
         emAtendimento(pt);
         pthread_mutex_unlock(&mutex);
         break;
