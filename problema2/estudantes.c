@@ -5,14 +5,17 @@
 #include <time.h>
 #include <semaphore.h>
 #include <math.h>
+#include <time.h>
+#include <signal.h>
 
-#define RAND 1
+#define totalThreads 4
+#define maxAlunos totalThreads / 2
+#define DELAY 1
 
-int totalThreads = 4;
-int countThreads = 4;
+//Global variables
+int countThreads = totalThreads;
 sem_t sem_aluno;
 sem_t sem_monitor;
-sem_t sem_aviso;
 sem_t sem_filaEspera;
 sem_t sem_sendoAtendido;
 pthread_mutex_t mutex;
@@ -27,60 +30,38 @@ typedef struct thread{
 void* monitor(void *pt) {
   while(countThreads > 1)
   {
+    printf("THREADS: %d\n", countThreads);
     int qntAluno;
     int sendoAtendido;
+    int requisicaoMonitor;
     sem_getvalue(&sem_sendoAtendido, &sendoAtendido);
     sem_getvalue(&sem_filaEspera, &qntAluno);
-    if(sendoAtendido == 1 && qntAluno == (int)ceil((totalThreads-1)/2.0)) {
+    sem_getvalue(&sem_monitor, &requisicaoMonitor);
+    if(requisicaoMonitor == 1) {
       printf("Monitor dormindo\n");
-      sleep(5);
+      sleep(DELAY);
     }
     else {
-      printf("MONITOR ATENDENDO\n");
+      printf("Monitor atendendo\n");
       sem_wait(&sem_aluno);
-      sleep(5);
       sem_post(&sem_monitor);
-
-      // --countThreads;
-      sem_wait(&sem_aviso);
+      sleep(DELAY);
     }
   }
-}
-
-void* emAtendimento(void *pt){
-  sem_wait(&sem_sendoAtendido);
-  Thread *pt_aux = (Thread *) pt;
-  sem_wait(&sem_monitor);
-  printf("O aluno %lu está sendo atendido\n", pt_aux->id);
-  sleep(5);
-  sem_post(&sem_aluno);
-  if(pt_aux->filaEspera == 1)
-  {
-    sem_post(&sem_filaEspera);
-    pt_aux->filaEspera = 0;
-  }
-
-  pt_aux->count++;
-  if(pt_aux->count == 3)
-    --countThreads;
-
-  sem_post(&sem_aviso);
-  sem_post(&sem_sendoAtendido);
 }
 
 void* comportamentoAluno(void* pt){
   Thread *pt_aux = (Thread *) pt;
 
   while(pt_aux->count < 3){
-    int r = rand()%2;
     int total;
     int sendoAtendido;
     // printf("ESCOLHA: %d\n", r);
 
-    switch(r){
+    switch(rand()%2){
       case 0:
         printf("O aluno %lu foi dormir\n", pt_aux->id);
-        sleep(7);
+        sleep(DELAY);
         // ficar em casa
       break;
 
@@ -94,7 +75,7 @@ void* comportamentoAluno(void* pt){
 
         if(sendoAtendido == 0 && total > 0)
         {
-          printf("O aluno %lu entrou na fila de espera, na posição %d\n", pt_aux->id, ((int)ceil((totalThreads-1)/2.0) - total)+1);
+          printf("O aluno %lu entrou na fila de espera, na posição %d\n", pt_aux->id, (maxAlunos - total)+1);
           sem_wait(&sem_filaEspera);
           pt_aux->filaEspera = 1;
         }
@@ -102,26 +83,54 @@ void* comportamentoAluno(void* pt){
         else if(total <= 0)
         {
           pthread_mutex_unlock(&mutex_filaEspera);
-          sleep(3);
+          sleep(DELAY);
           break;
         }
         pthread_mutex_unlock(&mutex_filaEspera);
 
 
         pthread_mutex_lock(&mutex);
-        // printf("VALOR DO SENDOATENDIDO = %d\n", sendoAtendido);
-        emAtendimento(pt);
+
+        printf("VALOR DO SENDOATENDIDO = %d\n", sendoAtendido);
+        sem_wait(&sem_sendoAtendido);
+
+
+        sem_wait(&sem_monitor);
+        printf("O aluno %lu está sendo atendido\n", pt_aux->id);
+        sleep(DELAY);
+        if(pt_aux->filaEspera == 1)
+        {
+          sem_post(&sem_filaEspera);
+          pt_aux->filaEspera = 0;
+        }
+
+        pt_aux->count++;
+        if(pt_aux->count == 3)
+          --countThreads;
+
+        sem_post(&sem_aluno);
+        sem_post(&sem_sendoAtendido);
+
         pthread_mutex_unlock(&mutex);
         break;
     }
   }
 }
 
+void ctrlc(int signal)
+{
+  printf("CTRL+C recebido");
+  // for (int i = 0; i < totalThreads; i++) {
+  // }
+  exit(0);
+}
+
 int main(){
+  signal(SIGINT, ctrlc);
+  srand(time(NULL));
   sem_init(&sem_aluno, 0, 0);
   sem_init(&sem_monitor, 0, 1);
-  sem_init(&sem_aviso, 0, 0);
-  sem_init(&sem_filaEspera, 0, (int)ceil((totalThreads-1)/2.0));
+  sem_init(&sem_filaEspera, 0, maxAlunos);
   sem_init(&sem_sendoAtendido, 0, 1);
   pthread_mutex_init(&mutex,NULL);
   pthread_mutex_init(&mutex_filaEspera,NULL);
@@ -140,12 +149,14 @@ int main(){
     pt[i].count = 0;
     pt[i].id = i;
   	pthread_create(&tids[i], &attr_i, comportamentoAluno, &pt[i]);
+    // pthread_cancel(&pt[i]);
   }
 
   for (int i = totalThreads-1; i >= 0; i--) {
     pthread_join(tids[i], NULL);
   }
 
+  //Signal do ctrl + c para matar threads
 
   return 0;
 }
