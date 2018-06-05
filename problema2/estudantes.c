@@ -34,11 +34,16 @@ void* monitor(void *pt)
 {
   while(countThreads > 1)
   {
-    printf("THREADS: %d\n", countThreads);
+    // printf("THREADS: %d\n", countThreads);
+    int qntAluno;
+    int sendoAtendido;
     int requisicaoMonitor;
+    sem_getvalue(&sem_sendoAtendido, &sendoAtendido);
+    sem_getvalue(&sem_filaEspera, &qntAluno);
     sem_getvalue(&sem_monitor, &requisicaoMonitor);
+    sleep(DELAY);
 
-    if(requisicaoMonitor == 1)
+    if(requisicaoMonitor == 1 && qntAluno >= maxAlunos)
     {
       sleep(DELAY);
       printf("Monitor dormindo\n");
@@ -54,8 +59,7 @@ void* monitor(void *pt)
 }
 
 //Função Aluno
-void* comportamentoAluno(void* pt)
-{
+void* comportamentoAluno(void* pt){
   Thread *pt_aux = (Thread *) pt;
 
   while(pt_aux->count < 3)
@@ -90,9 +94,11 @@ void* comportamentoAluno(void* pt)
           // sleep(DELAY);
           break;
         }
-
         pthread_mutex_unlock(&mutex_filaEspera);
+
+
         pthread_mutex_lock(&mutex);
+        printf("O aluno %lu está sendo atendido\n", pt_aux->id);
 
         // printf("VALOR DO SENDOATENDIDO = %d\n", sendoAtendido);
         if(pt_aux->filaEspera == 1)
@@ -100,10 +106,9 @@ void* comportamentoAluno(void* pt)
           sem_post(&sem_filaEspera);
           pt_aux->filaEspera = 0;
         }
-
         sem_wait(&sem_sendoAtendido);
+
         sem_wait(&sem_monitor);
-        printf("O aluno %lu está sendo atendido\n", pt_aux->id);
         // sleep(DELAY);
 
         pt_aux->count++;
@@ -112,6 +117,7 @@ void* comportamentoAluno(void* pt)
 
         sem_post(&sem_aluno);
         sem_post(&sem_sendoAtendido);
+        printf("O aluno %lu foi atendido\n", pt_aux->id);
         pthread_mutex_unlock(&mutex);
         break;
     }
