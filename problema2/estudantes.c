@@ -162,6 +162,12 @@ int main()
     //matar threads
   }
   //Signal do ctrl + c para matar threads
+  sem_destroy(&sem_aluno);
+  sem_destroy(&sem_monitor);
+  sem_destroy(&sem_filaEspera);
+  sem_destroy(&sem_sendoAtendido);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&mutex_filaEspera);
 
   return 0;
 }
