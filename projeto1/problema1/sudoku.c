@@ -103,7 +103,7 @@ int main(){
 	struct_grid dados[9];
 
 	FILE *file;
-	file = fopen("numeros.txt", "r");
+	file = fopen("sudokus/10.txt", "r");
 
 	int k = 0;
 	fscanf (file, "%d", &k);
