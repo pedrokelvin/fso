@@ -12,6 +12,7 @@ CC_C = $(CROSS_TOOL)gcc
 CFLAGS = -pthread -lm
 
 all: clean $(TARGETS)
+		 clear
 	   ./estudantes
 
 $(TARGETS):

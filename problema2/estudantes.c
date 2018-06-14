@@ -159,8 +159,10 @@ int main()
   for (int i = totalThreads-1; i >= 0; i--)
   {
     pthread_join(tids[i], NULL);
+    pthread_cancel(tids[i]);
     //matar threads
   }
+  printf("Todos os alunos foram atendidos corretamente\n");
   //Signal do ctrl + c para matar threads
   sem_destroy(&sem_aluno);
   sem_destroy(&sem_monitor);

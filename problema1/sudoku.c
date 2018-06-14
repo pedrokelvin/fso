@@ -17,7 +17,6 @@ void inicializar_vetor(int *valor)
 }
 
 void* check_linha(void* sudoku){
-
 	int (*sudoku_aux)[9] = sudoku;
 	int valor[9];
 	int flag = 1;
@@ -26,12 +25,6 @@ void* check_linha(void* sudoku){
 
 	for(int i = 0; i < 9; i++){
 		for(int j = 0; j < 9; j++){
-			// if(--valor[sudoku_aux[i][j]-1] == (-1)*(i + 1))
-			// {
-			// 	printf("Um erro encontrado na linha!\nNúmero %d se repete na linha %d, coluna: %d.\n\n", sudoku_aux[i][j], i+1, j+1);
-			// 	pthread_exit((int*)0);
-			// }
-
 			if(--valor[sudoku_aux[i][j]-1] < 0){
 				printf("Numero %d se repete na linha %d.\n\n",sudoku_aux[i][j],i+1);
 				flag = 0;
@@ -55,13 +48,6 @@ void* check_coluna(void* sudoku){
 
 	for(int i = 0; i < 9; i++){
 		for(int j = 0; j < 9; j++){
-
-			// if(--valor[sudoku_aux[j][i]-1] == (-1)*(i + 1))
-			// {
-			// 	printf("Um erro encontrado na coluna!\nNúmero %d se repete na linha %d, coluna: %d.\n\n", sudoku_aux[i][j], i+1, j+1);
-			// 	pthread_exit((int*)0);
-			// }
-
 			if(--valor[sudoku_aux[j][i]-1] < 0)
 			{
 				printf("Numero %d se repete na coluna %d.\n\n",sudoku_aux[j][i],i+1);
@@ -103,7 +89,7 @@ int main(){
 	struct_grid dados[9];
 
 	FILE *file;
-	file = fopen("numeros.txt", "r");
+	file = fopen("arquivos/10.txt", "r");
 
 	int k = 0;
 	fscanf (file, "%d", &k);
@@ -152,6 +138,7 @@ int main(){
 
 	for (int i = 0; i < 11; i++) {
 		pthread_join(tids[i], (void*)&resultado[i]);
+		pthread_cancel(tids[i]);
 	}
 
 	for (int i = 0; i < 11; i++) {
