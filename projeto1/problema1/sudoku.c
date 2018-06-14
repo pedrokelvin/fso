@@ -89,7 +89,11 @@ int main(){
 	struct_grid dados[9];
 
 	FILE *file;
+<<<<<<< HEAD:problema1/sudoku.c
 	file = fopen("arquivos/10.txt", "r");
+=======
+	file = fopen("sudokus/10.txt", "r");
+>>>>>>> d9474d3b9dc439c4be73c035a4630a88f6f26e9a:projeto1/problema1/sudoku.c
 
 	int k = 0;
 	fscanf (file, "%d", &k);
