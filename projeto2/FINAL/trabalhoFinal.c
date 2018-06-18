@@ -8,7 +8,7 @@
 #define TAMANHO_PAGINA 256
 #define TAMANHO_VIRTUAL 256
 #define TAMANHO_FISICA 256
-#define TAMANHO_TBL 16
+#define TAMANHO_TLB 16
 #define TAMANHO_QUADRO 256 // Para dar 256 quadros de 256 bytes
 
 void manipulacaoErros(int pagina, int vetor[][256]) // Retorna o quadro da página requerida
@@ -33,7 +33,7 @@ void manipulacaoErros(int pagina, int vetor[][256]) // Retorna o quadro da pági
 
 int main(int argc, char *argv[]){
   int total_numeros = 0;
-  int tlb[TAMANHO_TBL][2];
+  int tlb[TAMANHO_TLB][2];
 
   int memoria_fisica[TAMANHO_FISICA][256]; // [QUADRO][INFORMAÇÕES]
   int memoria_virtual[TAMANHO_VIRTUAL][2];
@@ -42,16 +42,17 @@ int main(int argc, char *argv[]){
   // [0] Id [1] Nº Quadro (Memória física)
   for(int i = 0; i < TAMANHO_VIRTUAL; i++)
   {
-      memoria_virtual[i][0] = i;
-      memoria_virtual[i][1] = -1;
-      // Memória Física
-      // [0] Id [1] Informações
-      for (int j = 0; j < 256; j++) {
-        memoria_fisica[i][j] = -1;
-      }
+    memoria_virtual[i][0] = i;
+    memoria_virtual[i][1] = -1;
+    // Memória Física
+    // [0] Id [1] Informações
+    for (int j = 0; j < 256; j++)
+    {
+      memoria_fisica[i][j] = -1;
+    }
   }
 
-  for(int i = 0; i < TAMANHO_TBL; i++)
+  for(int i = 0; i < TAMANHO_TLB; i++)
   {
     tlb[i][0] = -1;
     tlb[i][1] = -1;
@@ -73,33 +74,34 @@ int main(int argc, char *argv[]){
       int pagina = (atoi(numero) & 65280) >> 8; //65280 -> 1111 1111 0000 0000 depois do shift 0000 0000 1111 1111
       int flag_tlb = 0;
 
-      for(int i = 0; i < TAMANHO_TBL; i++)
+      for(int i = 0; i < TAMANHO_TLB; i++)
       {
        if(tlb[i][0] == pagina)
        {
+         printf("%d\n", total_numeros);
+         tlb_count++;
          flag_tlb = 1;
          // printf("TLB FOI UTILIZADO\n");
-         tlb_count++;
          break;
        }
       }
 
-     if(memoria_virtual[pagina][1] < 0 && !flag_tlb)
+     if(!flag_tlb)
      {
-       // printf("MANIPULAÇÃO DE ERROS FOI UTILIZADA!\n");
-       manipulacaoErros(pagina, memoria_fisica);
-       memoria_virtual[pagina][1] = pagina;
-       error_count++;
-       // printf("Informação = %d\n", memoria_fisica[pagina][offset]);
-     }
-     else
-     {
-        // printf("A TABELA DE PÁGINAS FOI UTILIZADA\n");
+       if(memoria_virtual[pagina][1] < 0)
+       {
+         // printf("MANIPULAÇÃO DE ERROS FOI UTILIZADA!\n");
+         manipulacaoErros(pagina, memoria_fisica);
+         memoria_virtual[pagina][1] = pagina;
+         error_count++;
+         // printf("Informação = %d\n", memoria_fisica[pagina][offset]);
+       }
 
-        //Andando a fila
+        // printf("A TABELA DE PÁGINAS FOI UTILIZADA\n");
+        //FIFO
         int aux_numero;
         int aux_endereco;
-        for(int i=15; i< 1; i++)
+        for(int i=TAMANHO_TLB; i>=1; i--)
         {
           aux_numero = tlb[i-1][0];
           aux_endereco = tlb[i-1][1];
@@ -112,29 +114,17 @@ int main(int argc, char *argv[]){
       }
 
       printf("Endereço Virtual = %d     \t", pagina);
-
       //Calculando endereço físico
       endereco_fisico = (memoria_virtual[pagina][1] * TAMANHO_PAGINA) + offset;
-
       printf("Endereço Físico: %d     \t", endereco_fisico);
-
       printf("Informação = %d\n", memoria_fisica[memoria_virtual[pagina][1]][offset]);
       contador_pagina++;
   }
 
   //Calculando pages faults
   printf("\nTaxa de erros de página %.2f%%   TOTAL ERROS -> %d\n", (double) error_count / total_numeros *100, error_count);
-  printf("\nTaxa de sucesso do TLB: %.2f%%   Total TLB -> %d\n", (double) tlb_count / total_numeros * 100, tlb_count);
-
   //Falta a taxa de erros da página
-
-  // for (int i = 0; i < TAMANHO_QUADRO; i++) {
-  //   for (int j = 0; j < TAMANHO_QUADRO; j++) {
-  //     printf("%d ", memoria_fisica[i][j]);
-  //   }
-  //   printf("\n");
-  // }
-
+  printf("\nTaxa de sucesso do TLB: %.2f%%   Total TLB -> %d\n", (double) tlb_count / total_numeros * 100, tlb_count);
 
   fclose(pFile);
   exit(EXIT_SUCCESS);
