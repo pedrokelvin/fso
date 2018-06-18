@@ -113,16 +113,16 @@ int main(int argc, char *argv[]){
         tlb[0][1] = memoria_virtual[pagina][0];
       }
 
-      printf("Endereço Virtual = %d     \t", pagina);
+      printf("Endereço lógico = %s      \tQuadro = %d    \tOffset = %d      \t", numero, pagina, offset);
       //Calculando endereço físico
       endereco_fisico = (memoria_virtual[pagina][1] * TAMANHO_PAGINA) + offset;
       printf("Endereço Físico: %d     \t", endereco_fisico);
-      printf("Informação = %d\n", memoria_fisica[memoria_virtual[pagina][1]][offset]);
+      printf("Valor do Byte = %d\n", memoria_fisica[memoria_virtual[pagina][1]][offset]);
       contador_pagina++;
   }
 
   //Calculando pages faults
-  printf("\nTaxa de erros de página %.2f%%   TOTAL ERROS -> %d\n", (double) error_count / total_numeros *100, error_count);
+  printf("\nTaxa de erros de página %.2f%%   TOTAL ERROS -> %d\n", (double) error_count / (double)total_numeros *100, error_count);
   //Falta a taxa de erros da página
   printf("\nTaxa de sucesso do TLB: %.2f%%   Total TLB -> %d\n", (double) tlb_count / total_numeros * 100, tlb_count);
 
